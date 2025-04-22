@@ -3,9 +3,16 @@ import React, { useState } from "react";
 import { toast } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 
-// WARNING: Do NOT use private API keys in frontend code for production.
-// Anyone can view them! This is okay ONLY for demo/staging/public/test keys.
-const OPENAI_API_KEY = "sk-...your-key-here..."; // <-- Put your actual OpenAI API key here
+// Paste your actual OpenAI API key here (must be a public/testing key for frontend use)
+const OPENAI_API_KEY = "sk-...your-key-here..."; // <-- Put your API key here
+
+// ***** Place your ChatGPT agent system prompt in this variable *****
+const AGENT_SYSTEM_PROMPT = `
+You are a fun and insightful quiz bot. Given answers to a Friends character quiz, you determine which of the main characters the user is most like. Start your output ONLY with the character's name on the first line, then a playful explanation in a new paragraph.
+
+(You can edit this text: Put your ChatGPT agent code here.)
+`;
+// ******************************************
 
 type QuizAIResultProps = {
   answers: string[];
@@ -13,7 +20,11 @@ type QuizAIResultProps = {
   onRestart: () => void;
 };
 
-export const QuizAIResult: React.FC<QuizAIResultProps> = ({ answers, questions, onRestart }) => {
+export const QuizAIResult: React.FC<QuizAIResultProps> = ({
+  answers,
+  questions,
+  onRestart,
+}) => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -23,30 +34,39 @@ export const QuizAIResult: React.FC<QuizAIResultProps> = ({ answers, questions, 
     setError(null);
     setResult(null);
 
-    const prompt = 
-      `You are a fun and insightful quiz bot. Given the quiz answers below, determine which Friends character (Ross, Rachel, Joey, Monica, Chandler, Phoebe) the user is MOST like. Your output should start ONLY with the name of the character on the first line, then a short, playful explanation why you chose that result in a second paragraph. 
-
-Questions and answers:\n` + 
-      questions.map((q, i) => `Q${i+1}: ${q}\nA${i+1}: ${answers[i]}`).join("\n") +
-      "\n\nRemember, only output the character name first, then the explanation on a new line.";
+    // Send the quiz data as a "user" message, using your agent prompt as the "system" message
+    const userMessage =
+      questions
+        .map(
+          (q, i) => `Q${i + 1}: ${q}\nA${i + 1}: ${answers[i]}`
+        )
+        .join("\n");
 
     try {
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${OPENAI_API_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model: "gpt-4o",
-          messages: [{ role: "user", content: prompt }],
-          max_tokens: 200,
-          temperature: 0.8,
-        }),
-      });
+      const response = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "gpt-4o", // Use your desired model
+            messages: [
+              { role: "system", content: AGENT_SYSTEM_PROMPT.trim() },
+              { role: "user", content: userMessage },
+            ],
+            max_tokens: 200,
+            temperature: 0.8,
+          }),
+        }
+      );
 
       if (!response.ok) {
-        throw new Error("AI API request failed! (Check your API key and usage limits)");
+        throw new Error(
+          "AI API request failed! (Check your API key and usage limits)"
+        );
       }
 
       const data = await response.json();
@@ -58,9 +78,9 @@ Questions and answers:\n` +
       toast("AI has analyzed your quiz results!");
     } catch (e: any) {
       setError(e.message || "Unknown error contacting AI.");
-      toast(e.message || "Unknown error contacting AI.", { 
+      toast(e.message || "Unknown error contacting AI.", {
         description: "AI API analysis failed.",
-        variant: "destructive" 
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -100,4 +120,3 @@ Questions and answers:\n` +
     </div>
   );
 };
-
