@@ -3,6 +3,10 @@ import React, { useState } from "react";
 import { toast } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 
+// WARNING: Do NOT use private API keys in frontend code for production.
+// Anyone can view them! This is okay ONLY for demo/staging/public/test keys.
+const OPENAI_API_KEY = "sk-...your-key-here..."; // <-- Put your actual OpenAI API key here
+
 type QuizAIResultProps = {
   answers: string[];
   questions: string[];
@@ -10,7 +14,6 @@ type QuizAIResultProps = {
 };
 
 export const QuizAIResult: React.FC<QuizAIResultProps> = ({ answers, questions, onRestart }) => {
-  const [apiKey, setApiKey] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +34,7 @@ Questions and answers:\n` +
       const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${apiKey}`,
+          "Authorization": `Bearer ${OPENAI_API_KEY}`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
@@ -52,16 +55,12 @@ Questions and answers:\n` +
         throw new Error("No response from AI.");
       }
       setResult(content.trim());
-      toast({
-        title: "Success",
-        description: "AI has analyzed your quiz results!",
-      });
+      toast("AI has analyzed your quiz results!");
     } catch (e: any) {
       setError(e.message || "Unknown error contacting AI.");
-      toast({
-        title: "Error",
-        description: e.message || "Unknown error contacting AI.",
-        variant: "destructive",
+      toast(e.message || "Unknown error contacting AI.", { 
+        description: "AI API analysis failed.",
+        variant: "destructive" 
       });
     } finally {
       setLoading(false);
@@ -75,19 +74,11 @@ Questions and answers:\n` +
           <div className="mb-6 text-center">
             <h2 className="text-xl font-bold mb-2">Get your result, powered by AI!</h2>
             <p className="mb-4 text-gray-600">
-              {"Enter your OpenAI API key below (won't be stored), then click Analyze to reveal which Friends character you are."}
+              {"Click below to reveal which Friends character you are. (Powered by ChatGPT)"}
             </p>
-            <input
-              className="px-3 py-2 border rounded w-full mb-4"
-              type="password"
-              placeholder="sk-..."
-              value={apiKey}
-              onChange={e => setApiKey(e.target.value)}
-              disabled={loading}
-            />
             <Button 
               onClick={handleAnalyze} 
-              disabled={loading || !apiKey}
+              disabled={loading}
               className="w-full"
             >
               {loading ? "Analyzing..." : "Analyze with AI"}
@@ -109,3 +100,4 @@ Questions and answers:\n` +
     </div>
   );
 };
+
