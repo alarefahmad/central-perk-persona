@@ -1,8 +1,8 @@
-
 import React, { useState } from "react";
-import { Smile, Laugh, Heart, Users, Star, Question, Tv } from "lucide-react";
+import { Smile, Laugh, Heart, Users, Star, Tv } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { QuizAIResult } from "@/components/QuizAIResult";
 
 type Character = "Ross" | "Rachel" | "Joey" | "Monica" | "Chandler" | "Phoebe";
 
@@ -39,7 +39,6 @@ const characters: Record<Character, { color: string; icon: React.ReactNode; blur
   },
 };
 
-// QUESTION DATA
 const quiz = [
   {
     question: "What's your ideal way to spend a free evening?",
@@ -99,7 +98,6 @@ const quiz = [
 ];
 
 function getResult(answers: Character[]): Character {
-  // Count which character appears most
   const tally: Record<Character, number> = {
     Ross: 0,
     Rachel: 0,
@@ -111,22 +109,20 @@ function getResult(answers: Character[]): Character {
   answers.forEach((c) => {
     tally[c] = (tally[c] || 0) + 1;
   });
-  // return the character with the highest count; on tie, pick the first in array order
   return (Object.keys(tally) as Character[]).reduce((a, b) => (tally[a] >= tally[b] ? a : b));
 }
 
 function BookOpen(props: React.ComponentProps<"svg">) {
-  // fallback for lucide-react book-open
   return (
     <svg viewBox="0 0 24 24" fill="none" {...props}><path stroke="currentColor" strokeWidth={2} d="M2 19V6a2 2 0 0 1 2-2h6v15H4a2 2 0 0 1-2-2Zm0 0V6m0 13h10M22 19V6a2 2 0 0 0-2-2h-6v15h6a2 2 0 0 0 2-2Z"/></svg>
   );
 }
 
 const FriendsQuiz: React.FC = () => {
-  const [answers, setAnswers] = useState<(Character | null)[]>(Array(quiz.length).fill(null));
+  const [answers, setAnswers] = useState<(string | null)[]>(Array(quiz.length).fill(null));
   const [showResult, setShowResult] = useState(false);
 
-  const handleChange = (qIdx: number, char: Character) => {
+  const handleChange = (qIdx: number, char: string) => {
     const copy = [...answers];
     copy[qIdx] = char;
     setAnswers(copy);
@@ -143,11 +139,6 @@ const FriendsQuiz: React.FC = () => {
     setAnswers(Array(quiz.length).fill(null));
     setShowResult(false);
   };
-
-  let resultChar: Character | null = null;
-  if (showResult) {
-    resultChar = getResult(answers.filter(Boolean) as Character[]);
-  }
 
   return (
     <div className="flex flex-col items-center justify-center py-10 px-2 min-h-screen bg-gradient-to-br from-orange-100 via-green-100 to-purple-100">
@@ -177,7 +168,7 @@ const FriendsQuiz: React.FC = () => {
                         name={`q${qIdx}`}
                         value={opt.character}
                         checked={answers[qIdx] === opt.character}
-                        onChange={() => handleChange(qIdx, opt.character as Character)}
+                        onChange={() => handleChange(qIdx, opt.character)}
                         className="accent-primary"
                         required
                       />
@@ -191,18 +182,13 @@ const FriendsQuiz: React.FC = () => {
               Get My Result
             </Button>
           </form>
-        ) : resultChar ? (
-          <div className="flex flex-col items-center py-8">
-            <div className={`rounded-full p-5 mb-4 shadow ${characters[resultChar].color}`}>
-              {characters[resultChar].icon}
-            </div>
-            <h2 className="text-2xl font-bold mb-2">You are: <span className="underline">{resultChar}</span>!</h2>
-            <p className="mb-6 text-center text-lg">{characters[resultChar].blurb}</p>
-            <Button onClick={handleRestart} variant="outline">
-              Try Again
-            </Button>
-          </div>
-        ) : null}
+        ) : (
+          <QuizAIResult 
+            answers={answers as string[]} 
+            questions={quiz.map(q => q.question)} 
+            onRestart={handleRestart} 
+          />
+        )}
       </Card>
       <a
         href="/"
