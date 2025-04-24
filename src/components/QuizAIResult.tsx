@@ -4,15 +4,10 @@ import { toast } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 
 // Paste your actual OpenAI API key here (must be a public/testing key for frontend use)
-const OPENAI_API_KEY = "sk-...your-key-here..."; // <-- Put your API key here
+const OPENAI_API_KEY = "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" // <-- Put your API key here
 
 // ***** Place your ChatGPT agent system prompt in this variable *****
-const AGENT_SYSTEM_PROMPT = `
-You are a fun and insightful quiz bot. Given answers to a Friends character quiz, you determine which of the main characters the user is most like. Start your output ONLY with the character's name on the first line, then a playful explanation in a new paragraph.
-
-(You can edit this text: Put your ChatGPT agent code here.)
-`;
-// ******************************************
+const AGENT_SYSTEM_PROMPT = "asst_lHfgE4NgFeJJZmStDb6yWzNk"
 
 type QuizAIResultProps = {
   answers: string[];
